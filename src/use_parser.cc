@@ -1,29 +1,83 @@
 #include <cassert>
+#include <cstring>
 #include <iostream>
 #include <stack>
-#include <cstring>
 #include <tree_sitter/api.h>
 
 extern "C" TSLanguage *tree_sitter_calc();
 
-void print_ast(const char *input, TSNode& node, std::stack<TSNode>& stk)
+std::stack<int> stk;
+
+void print_ast(const char *input, TSNode& node)
 {
   for (uint32_t i = 0; i < ts_node_child_count(node); i++) {
     TSNode child_node = ts_node_child(node, i);
     if (ts_node_child_count(child_node)) {
       std::cout << "Parent:" << ts_node_type(child_node) << std::endl;
-      print_ast(input, child_node, stk);
+      print_ast(input, child_node);
     }
-    if (ts_node_is_named(child_node)) {
-      uint32_t sb = ts_node_start_byte(child_node);
-      uint32_t eb = ts_node_end_byte(child_node);
-      uint32_t len = eb - sb + 1;
-      char tmp[len] = "";
-      strncpy(tmp, input + sb, eb-sb);
-      tmp[len] = '\0';
-      printf("    %s:%d[%d~%d] -> %s\n", ts_node_type(child_node), strlen(input), sb, eb, tmp);
+
+    if (!ts_node_is_named(child_node)) continue;
+
+    uint32_t sb = ts_node_start_byte(child_node);
+    uint32_t eb = ts_node_end_byte(child_node);
+    uint32_t len = eb - sb + 1;
+    char tmp[len] = "";
+    strncpy(tmp, input + sb, eb-sb);
+    tmp[len] = '\0';
+    printf("\t%s:%d[%d~%d] -> %s\n", ts_node_type(child_node), strlen(input), sb, eb, tmp);
+
+    if (strcmp(ts_node_type(child_node), "num") == 0) {
+      std::cout << "\t\tpush: " << tmp << std::endl;
+      stk.push(atoi(tmp));
+    }
+    else if (strcmp(ts_node_type(child_node), "add") == 0) {
+      int r = stk.top();
+      stk.pop();
+      int l = stk.top();
+      stk.pop();
+      stk.push(l+r);
+      std::cout << "\t\tpush: " << r << " + " << l << std::endl;
+    }
+    else if (strcmp(ts_node_type(child_node), "mul") == 0) {
+      int r = stk.top();
+      stk.pop();
+      int l = stk.top();
+      stk.pop();
+      stk.push(l*r);
+      std::cout << "\t\tpush: " << r << " * " << l << std::endl;
+    }
+    else if (strcmp(ts_node_type(child_node), "sub") == 0) {
+      int r = stk.top();
+      stk.pop();
+      int l = stk.top();
+      stk.pop();
+      stk.push(l-r);
+      std::cout << "\t\tpush: " << r << " - " << l << std::endl;
+    }
+    else if (strcmp(ts_node_type(child_node), "div") == 0) {
+      int r = stk.top();
+      stk.pop();
+      int l = stk.top();
+      stk.pop();
+      std::cout << "\t\tpush: " << r << " / " << l << std::endl;
+      stk.push(l/r);
+    }
+    else if (strcmp(ts_node_type(child_node), "uminus") == 0) {
+      int top = stk.top();
+      stk.pop();
+      std::cout << "\t\tpush: " << "-1 * " << top << std::endl;
+      stk.push(-1 * top);
+    }
+    else if (strcmp(ts_node_type(child_node), "ERROR") == 0) {
+      std::cout << "TODO: parse error recover" << std::endl;
+    }
+    else {
+      std::cout << "unknown node type: " << ts_node_type(child_node) << std::endl;
     }
   }
+
+  std::cout << "\t\t\tcurrent top: " << stk.top() << std::endl;
 }
 
 void print_ast_stk(const char *input, TSNode node)
@@ -82,8 +136,10 @@ int main() {
     std::cout << string << std::endl;
     std::cout << "-----------------" << std::endl;
 
-    std::stack<TSNode> stk;
-    print_ast(input.c_str(), root_node, stk);
+    print_ast(input.c_str(), root_node);
+    std::cout << "Answer: " << stk.top() << std::endl;
+    stk.pop();
+
     // std::cout << "-----------------" << std::endl;
     // print_nd_stk(input.c_str(), root_node);
   }
