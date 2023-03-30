@@ -52,9 +52,9 @@ add_executable(learn_tree_sitter
     )
 add_dependencies(learn_tree_sitter tree-sitter-build)
 
-target_include_directories(learn_tree_sitter PUBLIC
-    ${CMAKE_SOURCE_DIR}/tree-sitter/include
-    )
+#target_include_directories(learn_tree_sitter PUBLIC
+#    ${CMAKE_SOURCE_DIR}/tree-sitter/include
+#    )
 
 target_link_libraries(learn_tree_sitter
     PRIVATE tree-sitter
@@ -67,9 +67,9 @@ add_executable(use_parser
     )
 add_dependencies(use_parser tree-sitter-build)
 
-target_include_directories(use_parser PUBLIC
-    ${CMAKE_SOURCE_DIR}/tree-sitter/include
-    )
+#target_include_directories(use_parser PUBLIC
+#    ${CMAKE_SOURCE_DIR}/tree-sitter/include
+#    )
 
 target_link_libraries(use_parser
     PRIVATE tree-sitter

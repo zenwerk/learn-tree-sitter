@@ -2,7 +2,8 @@
 #include <cstring>
 #include <iostream>
 #include <stack>
-#include <tree_sitter/api.h>
+
+#include "tree_sitter/api.h"
 
 extern "C" TSLanguage *tree_sitter_calc();
 
@@ -22,10 +23,10 @@ void print_ast(const char *input, TSNode& node)
     uint32_t sb = ts_node_start_byte(child_node);
     uint32_t eb = ts_node_end_byte(child_node);
     uint32_t len = eb - sb + 1;
-    char tmp[len] = "";
+    char tmp[len];
     strncpy(tmp, input + sb, eb-sb);
     tmp[len] = '\0';
-    printf("\t%s:%d[%d~%d] -> %s\n", ts_node_type(child_node), strlen(input), sb, eb, tmp);
+    printf("\t%s:%zu[%d~%d] -> %s\n", ts_node_type(child_node), strlen(input), sb, eb, tmp);
 
     if (strcmp(ts_node_type(child_node), "num") == 0) {
       std::cout << "\t\tpush: " << tmp << std::endl;
