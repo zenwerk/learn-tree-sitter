@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "tree_sitter/api.h"
+#include <tree_sitter/api.h>
 
 TSLanguage *tree_sitter_calc();
 
