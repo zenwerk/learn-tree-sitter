@@ -29,6 +29,7 @@ CPMAddPackage(
     DOWNLOAD_ONLY YES
     )
 
+# build libtree-sitter.a
 add_custom_command(
     OUTPUT ${tree-sitter_SOURCE_DIR}/libtree-sitter.a
     COMMAND make libtree-sitter.a
@@ -36,6 +37,7 @@ add_custom_command(
     COMMENT "Building libtree-sitter.a"
     )
 
+# using tree-sitter depends on libtree-sitter.a
 add_custom_target(tree-sitter-build
     DEPENDS ${tree-sitter_SOURCE_DIR}/libtree-sitter.a
     )
