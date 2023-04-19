@@ -11,63 +11,69 @@ std::stack<int> stk;
 
 void print_ast(const char *input, TSNode& node)
 {
+  // 子ノードを辿って再帰的に処理していく
   for (uint32_t i = 0; i < ts_node_child_count(node); i++) {
+    // 子ノードを取得
     TSNode child_node = ts_node_child(node, i);
+    // 子ノードが更に子ノードを持つなら再帰する
     if (ts_node_child_count(child_node)) {
       std::cout << "Parent:" << ts_node_type(child_node) << std::endl;
       print_ast(input, child_node);
     }
 
+    // `(`, `)` のようなASTとして無視できる記号なら何もしない
     if (!ts_node_is_named(child_node)) continue;
 
-    uint32_t sb = ts_node_start_byte(child_node);
-    uint32_t eb = ts_node_end_byte(child_node);
-    uint32_t len = eb - sb + 1;
+    // ASTに記録さている該当部分の文字列を取得する
+    uint32_t const sb = ts_node_start_byte(child_node);
+    uint32_t const eb = ts_node_end_byte(child_node);
+    uint32_t const len = eb - sb + 1;
     char tmp[len];
     strncpy(tmp, input + sb, eb-sb);
     tmp[len] = '\0';
     printf("\t%s:%zu[%d~%d] -> %s\n", ts_node_type(child_node), strlen(input), sb, eb, tmp);
 
+    // ノードの種類よって動作を変える
     if (strcmp(ts_node_type(child_node), "num") == 0) {
-      std::cout << "\t\tpush: " << tmp << std::endl;
+      std::cout << "\t\tpush: num(" << tmp << ")" << std::endl;
       stk.push(atoi(tmp));
     }
     else if (strcmp(ts_node_type(child_node), "add") == 0) {
-      int r = stk.top();
+      int const r = stk.top();
       stk.pop();
-      int l = stk.top();
+      int const l = stk.top();
       stk.pop();
       stk.push(l+r);
-      std::cout << "\t\tpush: " << r << " + " << l << std::endl;
+      std::cout << "\t\tpush: add(" << r << " + " << l << ")" << std::endl;
     }
     else if (strcmp(ts_node_type(child_node), "mul") == 0) {
-      int r = stk.top();
+      int const r = stk.top();
       stk.pop();
-      int l = stk.top();
+      int const l = stk.top();
       stk.pop();
       stk.push(l*r);
-      std::cout << "\t\tpush: " << r << " * " << l << std::endl;
+      std::cout << "\t\tpush: mul(" << r << " * " << l << ")" << std::endl;
     }
     else if (strcmp(ts_node_type(child_node), "sub") == 0) {
-      int r = stk.top();
+      int const r = stk.top();
       stk.pop();
-      int l = stk.top();
+      int const l = stk.top();
       stk.pop();
       stk.push(l-r);
-      std::cout << "\t\tpush: " << r << " - " << l << std::endl;
+      std::cout << "\t\tpush: sub(" << r << " - " << l <<")" << std::endl;
     }
     else if (strcmp(ts_node_type(child_node), "div") == 0) {
-      int r = stk.top();
+      int const r = stk.top();
       stk.pop();
-      int l = stk.top();
+      int const l = stk.top();
       stk.pop();
-      std::cout << "\t\tpush: " << r << " / " << l << std::endl;
+      std::cout << "\t\tpush: div(" << r << " / " << l << ")" << std::endl;
       stk.push(l/r);
     }
     else if (strcmp(ts_node_type(child_node), "uminus") == 0) {
-      int top = stk.top();
+      int const top = stk.top();
       stk.pop();
-      std::cout << "\t\tpush: " << "-1 * " << top << std::endl;
+      std::cout << "\t\tpush: uminus(" << "-1" << ")" << top << std::endl;
       stk.push(-1 * top);
     }
     else if (strcmp(ts_node_type(child_node), "ERROR") == 0) {
@@ -103,8 +109,8 @@ void print_ast_stk(const char *input, TSNode node)
         stk.push(ts_node_child(nd, i));
     } else {
       if (ts_node_is_named(nd)) {
-        uint32_t sb = ts_node_start_byte(nd);
-        uint32_t eb = ts_node_end_byte(nd);
+        uint32_t const sb = ts_node_start_byte(nd);
+        uint32_t const eb = ts_node_end_byte(nd);
         strncpy(tmp, input + sb, eb-sb);
         printf("%s[\"%s\"]\n", ts_node_type(nd), tmp);
       }
@@ -130,8 +136,10 @@ int main() {
         input.c_str(),
         input.size()
     );
+
     // 解析木の根を取得する
     TSNode root_node = ts_tree_root_node(tree);
+
     // 解析木をS式で出力
     auto string = std::string(ts_node_string(root_node));
     std::cout << string << std::endl;
