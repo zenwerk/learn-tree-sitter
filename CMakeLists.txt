@@ -76,3 +76,18 @@ target_include_directories(use_parser PUBLIC
 target_link_libraries(use_parser
     PRIVATE tree-sitter
     )
+
+# use_parser
+add_executable(edit_parser
+        src/parser.c
+        src/edit_parser.cc
+        )
+add_dependencies(edit_parser tree-sitter-build)
+
+target_include_directories(edit_parser PUBLIC
+        ${tree-sitter_SOURCE_DIR}/lib/include
+        )
+
+target_link_libraries(edit_parser
+        PRIVATE tree-sitter
+        )
